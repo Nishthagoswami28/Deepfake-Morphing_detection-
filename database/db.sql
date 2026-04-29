@@ -1,0 +1,12 @@
+CREATE DATABASE IF NOT EXISTS deepfake_db;
+
+USE deepfake_db;
+
+CREATE TABLE IF NOT EXISTS analysis (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    image_path VARCHAR(255) NOT NULL,
+    result VARCHAR(50) NOT NULL,
+    confidence DECIMAL(5,2) NOT NULL,
+    attack_type VARCHAR(50) DEFAULT 'None',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

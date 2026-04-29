@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="card">
+    <h1>DeepFake Detection System</h1>
+    <p>Detect AI-generated fake faces using deep learning.</p>
+</div>
+
+<div class="card">
+    <h2>Example</h2>
+    <img src="{{ url_for('static', filename='images/example.jpg') }}" width="300">
+    <p class="result-fake">Fake (92%)</p>
+</div>
+
+<a href="/analyze">
+    <button>Analyze Image</button>
+</a>
+
+{% endblock %}

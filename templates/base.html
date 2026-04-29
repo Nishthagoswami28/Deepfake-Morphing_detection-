@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DeepFake Detection</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav>
+        <div class="logo">
+            <h2>DeepFake Detector</h2>
+        </div>
+
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/analyze">Analyze</a></li>
+            <li><a href="/history">History</a></li>
+            <li><a href="/about">About</a></li>
+        </ul>
+    </nav>
+
+    <header class="header">
+        <h1>AI-Based DeepFake Detection System</h1>
+        <p>Detect fake faces using Deep Learning & Computer Vision</p>
+    </header>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>&copy; 2026 DeepFake Detection Project | Built with Flask & AI</p>
+    </footer>
+
+</body>
+</html>
