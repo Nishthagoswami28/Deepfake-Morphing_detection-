@@ -93,6 +93,12 @@ button:hover {
     color: white;
 }
 
+.result-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
 .history-table {
     width: 100%;
     border-collapse: collapse;

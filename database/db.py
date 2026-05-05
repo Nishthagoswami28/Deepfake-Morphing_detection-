@@ -1,11 +1,15 @@
-import pymysql
+import os
 
+import pymysql
+from dotenv import load_dotenv
+
+load_dotenv()
 
 DB_CONFIG = {
-    "host": "127.0.0.1",
-    "user": "root",
-    "password": "sql",
-    "database": "deepfake_db",
+    "host": os.getenv("DB_HOST", "127.0.0.1"),
+    "user": os.getenv("DB_USER", "root"),
+    "password": os.getenv("DB_PASSWORD", ""),
+    "database": os.getenv("DB_NAME", "deepfake_db"),
     "charset": "utf8",
     "cursorclass": pymysql.cursors.DictCursor,
 }

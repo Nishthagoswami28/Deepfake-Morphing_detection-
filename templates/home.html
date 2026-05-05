@@ -3,14 +3,14 @@
 {% block content %}
 
 <div class="card">
-    <h1>DeepFake Detection System</h1>
-    <p>Detect AI-generated fake faces using deep learning.</p>
+    <h1>DeepMorph Detection System</h1>
+    <p>Detect AI-generated deepfakes and face morphing attacks using deep learning.</p>
 </div>
 
 <div class="card">
     <h2>Example</h2>
     <img src="{{ url_for('static', filename='images/example.jpg') }}" width="300">
-    <p class="result-fake">Fake (92%)</p>
+    <p class="result-fake">Fake (100%)</p>
 </div>
 
 <a href="/analyze">

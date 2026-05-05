@@ -4,6 +4,8 @@ from pathlib import Path
 import cv2
 import numpy as np
 
+from model.morph_detection import detect_morph
+
 DATASET_ROOT = Path(__file__).resolve().parent.parent / "dataset" / "Human Faces Dataset"
 CLASS_FOLDERS = {
     "Deepfake": DATASET_ROOT / "AI-Generated Images",
@@ -11,10 +13,13 @@ CLASS_FOLDERS = {
     "Real": DATASET_ROOT / "Real Images",
 }
 CACHE_PATH = Path(__file__).with_name("hybrid_centroids.npz")
+REFERENCE_CACHE_PATH = Path(__file__).with_name("hybrid_reference_vectors.npz")
 IMAGE_SIZE = (224, 224)
 
 _FEATURE_STATS = None
 _CENTROIDS = None
+_REFERENCE_VECTORS = None
+_REFERENCE_LABELS = None
 
 
 def _extract_features(face):
@@ -58,6 +63,20 @@ def _iter_images(folder):
     return sorted(files)
 
 
+def _prepare_training_image(image):
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    face_cascade = cv2.CascadeClassifier(
+        cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+    )
+    faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+
+    if len(faces) > 0:
+        x, y, w, h = faces[0]
+        image = image[y:y + h, x:x + w]
+
+    return cv2.resize(image, IMAGE_SIZE)
+
+
 def _build_centroids():
     samples = {}
 
@@ -95,6 +114,29 @@ def _build_centroids():
     return mean, std, centroids
 
 
+def _build_reference_vectors(mean, std):
+    vectors = []
+    labels = []
+
+    for label, folder in CLASS_FOLDERS.items():
+        for image_path in _iter_images(folder)[:250]:
+            image = cv2.imread(image_path)
+            if image is None:
+                continue
+            prepared = _prepare_training_image(image)
+            vector = (_extract_features(prepared) - mean) / std
+            vectors.append(vector)
+            labels.append(label)
+
+    if not vectors:
+        raise RuntimeError("Not enough dataset images to build the reference classifier.")
+
+    vectors = np.stack(vectors)
+    labels = np.array(labels)
+    np.savez(REFERENCE_CACHE_PATH, vectors=vectors, labels=labels)
+    return vectors, labels
+
+
 def _load_classifier():
     global _FEATURE_STATS, _CENTROIDS
 
@@ -114,6 +156,37 @@ def _load_classifier():
     _FEATURE_STATS = (mean, std)
     _CENTROIDS = centroids
     return _FEATURE_STATS, _CENTROIDS
+
+
+def _load_reference_classifier(mean, std):
+    global _REFERENCE_VECTORS, _REFERENCE_LABELS
+
+    if _REFERENCE_VECTORS is not None and _REFERENCE_LABELS is not None:
+        return _REFERENCE_VECTORS, _REFERENCE_LABELS
+
+    if REFERENCE_CACHE_PATH.exists():
+        cache = np.load(REFERENCE_CACHE_PATH, allow_pickle=True)
+        vectors = cache["vectors"]
+        labels = cache["labels"]
+    else:
+        vectors, labels = _build_reference_vectors(mean, std)
+
+    _REFERENCE_VECTORS = vectors
+    _REFERENCE_LABELS = labels
+    return _REFERENCE_VECTORS, _REFERENCE_LABELS
+
+
+def _nearest_reference_label(normalized):
+    (mean, std), _ = _load_classifier()
+    vectors, labels = _load_reference_classifier(mean, std)
+    distances = np.linalg.norm(vectors - normalized, axis=1)
+    nearest_indices = np.argsort(distances)[:5]
+    nearest_labels = labels[nearest_indices]
+    unique_labels, counts = np.unique(nearest_labels, return_counts=True)
+    vote_label = unique_labels[np.argmax(counts)]
+    nearest_distance = float(distances[nearest_indices[0]])
+    nearest_label = str(labels[nearest_indices[0]])
+    return nearest_label, str(vote_label), nearest_distance
 
 
 def predict_image(face):
@@ -143,4 +216,19 @@ def predict_image(face):
     if second_distance > 0:
         confidence *= min(1.0, second_distance / max(best_distance, 1e-6))
 
-    return best_label, round(float(confidence) * 100, 2)
+    confidence_percent = round(float(confidence) * 100, 2)
+    nearest_label, vote_label, nearest_distance = _nearest_reference_label(normalized)
+
+    morph_score = detect_morph(resized)
+
+    if nearest_label != best_label and nearest_distance < 1.0 and confidence_percent < 65:
+        hybrid_confidence = min(90.0, confidence_percent + 20.0)
+        return nearest_label, round(hybrid_confidence, 2)
+
+    if vote_label != best_label and confidence_percent < 55:
+        return vote_label, confidence_percent
+
+    if best_label == "Deepfake" and morph_score >= 0.75 and confidence_percent < 70:
+        return "Morphing Attack", confidence_percent
+
+    return best_label, confidence_percent
