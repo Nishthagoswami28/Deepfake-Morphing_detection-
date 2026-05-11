@@ -154,7 +154,7 @@ http://127.0.0.1:5000
 
 - `/` - Home page
 
-![Home Page](static/images/Home.png)
+![Home Page](static/images/Home2.png)
 
 - `/analyze` - Upload image for analysis
 
