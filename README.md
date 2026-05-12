@@ -150,32 +150,6 @@ Open the website:
 http://127.0.0.1:5000
 ```
 
-## Main Pages
-
-- `/` - Home page
-
-![Home Page](static/images/Home2.png)
-
-- `/analyze` - Upload image for analysis
-
-- `/upload` - Handles uploaded image prediction and displays the result page
-
-Deepfake result:
-
-![Deepfake Result](static/images/deepfake_result.png)
-
-Morphing attack result:
-
-![Morphing Attack Result](static/images/Morphing_result.png)
-
-- `/history` - Shows previous analysis results
-
-![History Page](static/images/history.png)
-
-- `/about` - Project explanation
-
-![About Page](static/images/about.png)
-
 ## Heatmap Note
 
 Heatmaps are generated only for manipulated images:
