@@ -67,7 +67,7 @@ deepfake-detector/
 
 ### Home Page
 
-![Home Page](static/images/Home.png)
+![Home Page](static/images/Home2.png)
 
 ### Deepfake Result
 
